@@ -1,0 +1,15 @@
+@{ Layout="~/Views/Shared/_ReadingLayout.cshtml"; ViewBag.Title="Nhập đề thi từ Word"; }
+<section class="heading-row"><div><span class="eyebrow">TẠO ĐỀ THI TỪ NGUỒN WORD</span><h1>Nhập đề thi từ file Word (.docx)</h1><p>Hệ thống đọc cấu trúc câu hỏi, đáp án, gợi ý và ảnh theo bộ tag Reading V06.</p></div></section>
+<section class="steps"><span class="active">① Tải file lên</span><span>② Kiểm tra cấu trúc & nội dung</span><span>③ Xem trước đề thi</span><span>④ Xuất bản</span></section>
+@if (ViewBag.ImportError is string error)
+{
+    <section class="notice danger" role="alert" id="import-error"><h2>Không thể nhập đề thi</h2><p>Toàn bộ lượt import đã bị từ chối. Không lưu đề hoặc ảnh dang dở.</p><pre>@error</pre></section>
+}
+<section class="panel"><form action="/Reading/Upload" method="post" enctype="multipart/form-data" id="word-upload-form">
+    @Html.AntiForgeryToken()
+    <label class="dropzone" for="word-file"><span class="file-icon">↥</span><h2>Kéo thả file đề thi .docx hoặc bấm để chọn tệp</h2><p>Một đề 100 câu, 75 phút · Ảnh nhúng trong Word · Tối đa 25 MB</p><input id="word-file" type="file" name="file" accept=".docx" required /><span id="file-name" class="primary-text"></span></label>
+    <div class="import-options"><label><input type="checkbox" name="createNewVersion" value="true" checked="@(ViewBag.CreateNewVersion != false)" /> Tạo bản nháp mới từ file Word</label><p>Không cần sửa phiên bản trong Word. Nếu đề đã tồn tại, hệ thống tự cấp phiên bản mới (ví dụ 1.0-r1). Nếu file đã có bản nháp, mở lại bản nháp đó. Đề đã xuất bản và các bài làm cũ được giữ nguyên.</p><p>Bỏ chọn để dùng đúng phiên bản ghi trong Word và mở lại đề đã nhập.</p></div>
+    <div class="heading-row"><a href="/Reading">← Quản lý, xóa bản nháp hoặc lưu trữ đề</a><button class="primary" type="submit" id="upload-submit">Kiểm tra & nhập đề →</button></div><p id="upload-progress" class="notice" hidden>Đang đọc, kiểm tra và lưu toàn bộ đề. Vui lòng đợi…</p>
+</form></section>
+<section class="part-cards"><article class="panel"><span class="pill lavender">PART 5</span><h2>Incomplete Sentences</h2><strong>30 câu</strong><p>Câu 101–130 · Câu hỏi độc lập với 4 lựa chọn.</p></article><article class="panel"><span class="pill mint">PART 6</span><h2>Text Completion</h2><strong>16 câu</strong><p>Câu 131–146 · 4 nhóm bài đọc và 16 GAP_REF.</p></article><article class="panel"><span class="pill peach">PART 7</span><h2>Reading Comprehension</h2><strong>54 câu</strong><p>Câu 147–200 · 15 nhóm, hỗ trợ nhiều tài liệu.</p></article></section>
+<section class="panel"><h2>Bộ tag và điều kiện kiểm tra</h2><p class="tags">[[EXAM]] [[PART]] [[GROUP]] [[BLOCK]] [[GAP_REF]] [[QUESTION]] [[STEM]] [[OPTION]] [[ANSWER]] [[HINT]]</p><p>Thiếu tag, sai số câu, thiếu lựa chọn, đáp án/gợi ý hoặc lỗi ảnh đều làm hủy toàn bộ lượt import. Bản nháp nhập thành công vẫn cần giảng viên xác nhận đáp án trước khi xuất bản.</p></section>

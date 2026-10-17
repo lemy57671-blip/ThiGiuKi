@@ -1,0 +1,33 @@
+@model LeHoangMy_1381.MyProject.Toeic.AdminPreview
+@{
+    Layout="~/Views/Shared/_ReadingLayout.cshtml"; ViewBag.Title="Xem trước và chỉnh sửa đề";
+    var exam=Model.Paper.Exam; int number=ViewBag.Number;
+    var current=Model.Questions.Single(x => x.Question.OriginalNumber == number); var q=current.Question;
+    var group=Model.Paper.Groups.SingleOrDefault(g => g.Id == q.GroupId);
+    var draft=exam.Status == "DRAFT"; var verified=Model.Questions.Count(x => x.IsVerified);
+}
+<section class="panel heading-row"><div><span class="eyebrow">@exam.SourceId · VERSION @exam.Version</span><h1>@exam.Title</h1><p>@exam.QuestionCount câu · @exam.DurationMinutes phút · <span class="pill @(draft ? "peach" : "mint")">@exam.Status</span> · @verified/100 đáp án đã xác nhận</p></div><div class="actions"><form method="post" action="/Reading/Validate">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@exam.Id" /><button class="secondary">✓ Kiểm tra hợp lệ</button></form>@if (draft) { <button class="primary" id="open-publish" disabled="@(verified != 100)">↗ Xuất bản đề</button> }</div></section>
+<div class="exam-actions preview-management">@await Html.PartialAsync("_ReadingExamActions",exam) <a class="button secondary" href="/Reading/Upload">Nhập lại Word thành bản nháp mới</a></div>
+@if (draft && verified < 100)
+{
+    <section class="notice warning"><strong>Đáp án Word cần được giảng viên rà soát.</strong><p>Hệ thống không tự coi đáp án nhập từ Word là đáp án chính thức. Chọn từng câu để sửa và xác nhận, hoặc xác nhận toàn bộ sau khi đã đọc đủ đề.</p><form action="/Reading/Review" method="post" class="review-form">@Html.AntiForgeryToken()<input name="ExamId" type="hidden" value="@exam.Id" /><input name="ExamRowVersion" type="hidden" value="@Model.RowVersion" /><label><input name="ConfirmReviewed" type="checkbox" value="true" required /> Tôi đã kiểm tra đầy đủ 100 đáp án và gợi ý của phiên bản này.</label><button class="secondary" type="submit">Xác nhận đã rà soát 100 câu</button></form></section>
+}
+<div class="preview-grid"><aside class="panel question-nav"><h2>Danh sách câu hỏi</h2>@foreach (var part in new[] {5,6,7}) { <details open="@(q.PartNumber == part)"><summary>Part @part</summary><div class="question-grid">@foreach (var item in Model.Questions.Where(x => x.Question.PartNumber == part)) { <a href="/Reading/Preview/@exam.Id?number=@item.Question.OriginalNumber" class="question-number @(item.Question.Id == q.Id ? "active" : "") @(item.IsVerified ? "verified" : "")">@item.Question.OriginalNumber</a> }</div></details> }</aside>
+<div class="preview-content">
+@if(draft && group != null) { @await Html.PartialAsync("_ReadingBlockEditor",Model) }
+@if (group != null)
+{
+    <section class="panel passage"><span class="pill mint">PART @q.PartNumber · QUESTIONS @group.FirstQuestionNumber–@group.LastQuestionNumber</span><h2>Bài đọc chung · @group.Blocks.Count tài liệu</h2>@foreach (var block in group.Blocks) { <figure>@if (block.BlockType == "IMAGE") { <a href="data:@block.MimeType;base64,@block.ImageBase64" target="_blank" class="image-link"><img src="data:@block.MimeType;base64,@block.ImageBase64" alt="Bài đọc câu @group.FirstQuestionNumber–@group.LastQuestionNumber, tài liệu @block.DisplayOrder" /></a> } else { <p class="reading-text">@block.TextContent</p> }<figcaption>Tài liệu @block.DisplayOrder</figcaption></figure> }</section>
+}
+<section class="panel"><div class="heading-row"><h2>Question @q.OriginalNumber</h2><span class="pill @(current.IsVerified ? "mint" : "peach")">@(current.IsVerified ? "Đã xác nhận" : "Chưa xác nhận")</span></div>
+<form method="post" action="/Reading/Edit" id="question-edit-form">@Html.AntiForgeryToken()
+<input type="hidden" name="ExamId" value="@exam.Id" /><input type="hidden" name="QuestionId" value="@q.Id" /><input type="hidden" name="ExamRowVersion" value="@Model.RowVersion" /><input type="hidden" name="ReturnNumber" value="@q.OriginalNumber" />
+<fieldset disabled="@(!draft)"><label>Nội dung câu hỏi @if(q.GapLabel.HasValue) { <span>(Chỗ trống @q.GapLabel trong bài đọc chung)</span> }<textarea name="Stem" rows="4" class="reading-text" required="@(q.PartNumber != 6)">@q.Stem</textarea></label>
+@for (var i=0;i<q.Options.Count;i++) { var option=q.Options[i]; <label class="option-editor"><span class="letter">@option.Label</span><input type="hidden" name="Options[@i].Id" value="@option.Id" /><input type="hidden" name="Options[@i].Label" value="@option.Label" /><input type="text" name="Options[@i].Content" value="@option.Content" required class="reading-text" aria-label="Lựa chọn @option.Label" /></label> }
+<label>Đáp án đúng (theo ID lựa chọn)<select name="CorrectOptionId">@foreach(var option in q.Options) { <option value="@option.Id" selected="@(option.Id == current.CorrectOptionId)">@option.Label — @option.Content</option> }</select></label>
+<label>Gợi ý / Giải thích<textarea name="Hint" rows="4" required maxlength="8000">@current.Hint</textarea></label>
+<div class="checks">@if(q.PartNumber == 5) { <label><input type="checkbox" name="ShuffleQuestion" value="true" checked="@current.ShuffleQuestion" /> Cho phép hoán vị câu</label> }<label><input type="checkbox" name="ShuffleOptions" value="true" checked="@current.ShuffleOptions" /> Cho phép hoán vị lựa chọn</label><label><input type="checkbox" name="ConfirmAnswer" value="true" checked="@current.IsVerified" /> Tôi xác nhận đáp án và gợi ý câu này</label></div>
+@if (draft) { <button type="submit" class="primary">Lưu thay đổi & kiểm tra</button> } else { <p class="notice">Đề đã xuất bản bị khóa để bảo toàn lịch sử thi. Import version mới để cập nhật nội dung.</p> }
+</fieldset></form></section>
+</div></div>
+<dialog id="publish-dialog"><form action="/Reading/Publish" method="post">@Html.AntiForgeryToken()<input type="hidden" name="ExamId" value="@exam.Id" /><input type="hidden" name="ExamRowVersion" value="@Model.RowVersion" /><span class="file-icon">↗</span><h2>Xuất bản @exam.Title?</h2><p>Sinh viên có thể bắt đầu thi với dữ liệu phiên bản này. Nội dung và đáp án sẽ bị khóa sau khi xuất bản.</p><p class="pill lavender">100 câu · 75 phút · Đã xác nhận @verified/100</p><div class="actions"><button type="button" class="secondary" id="cancel-publish">Hủy bỏ</button><button type="submit" class="primary">Xác nhận xuất bản</button></div></form></dialog>

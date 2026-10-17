@@ -1,0 +1,34 @@
+@inject LeHoangMy_1381.MyProject.Web.Reading.ReadingOpenAccess ReadingAccess
+@{
+    Layout = null;
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewBag.Title · Mochi Reading</title>
+    <link rel="stylesheet" href="~/css/reading.css" asp-append-version="true" />
+</head>
+<body>
+<aside class="sidebar">
+    <a class="brand" href="/Reading?dashboard=true"><span class="brand-icon">▣</span><span>Mochi Reading<small>CỔNG GIẢNG VIÊN</small></span></a>
+    <nav aria-label="Điều hướng giảng viên">
+        <a href="/Reading?dashboard=true" class="@(ViewBag.Dashboard == true ? "active" : "")">◫ <span>Tổng quan</span></a>
+        <a href="/Reading" class="@(action is "Index" or "Preview" && ViewBag.Dashboard != true ? "active" : "")">▤ <span>Quản lý đề thi</span></a>
+        <a href="/Reading/Upload" class="@(action == "Upload" ? "active" : "")">↥ <span>Nhập đề từ Word</span></a>
+        <a href="/Reading/Statistics" class="@(action == "Statistics" ? "active" : "")">↗ <span>Thống kê kết quả</span></a>
+    </nav>
+</aside>
+<div class="workspace">
+    <header class="topbar"><span>⌂ Hệ thống <span class="muted">/</span> <b>Giảng viên Quản trị</b></span><div class="top-actions"><span class="pill mint">● Sẵn sàng</span><span class="pill lavender">Chế độ: Giảng viên</span><a href="http://localhost:5300" target="_blank" rel="noopener">Người học ↗</a>@if (!ReadingAccess.Enabled) { <a href="/Account/Logout">Đăng xuất</a> }</div></header>
+    <main class="main">
+        @if (TempData["ReadingMessage"] is string message) { <div class="notice success" role="status">✓ @message</div> }
+        @if (TempData["ReadingError"] is string readingError) { <div class="notice danger" role="alert">@readingError</div> }
+        @RenderBody()
+    </main>
+</div>
+<script src="~/js/jquery.min.js" asp-append-version="true"></script>
+<script src="~/js/reading.js" asp-append-version="true"></script>
+@await RenderSectionAsync("scripts", required: false)
+</body></html>

@@ -1,0 +1,20 @@
+@model LeHoangMy_1381.MyProject.Toeic.AdminPreview
+@{
+    int number=ViewBag.Number;
+    var question=Model.Questions.Single(q=>q.Question.OriginalNumber==number).Question;
+    var group=Model.Paper.Groups.Single(g=>g.Id==question.GroupId);
+}
+<details class="panel"><summary>Chỉnh sửa bài đọc chung của nhóm @group.FirstQuestionNumber–@group.LastQuestionNumber</summary>
+<p>Cập nhật bài đọc sẽ hủy xác nhận đáp án của toàn bộ câu trong nhóm. Giảng viên cần rà soát lại trước khi xuất bản.</p>
+@foreach(var block in group.Blocks)
+{
+    <form method="post" action="/Reading/EditBlock" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input name="examId" type="hidden" value="@Model.Paper.Exam.Id" /><input name="blockId" type="hidden" value="@block.Id" /><input name="examRowVersion" type="hidden" value="@Model.RowVersion" /><input name="returnNumber" type="hidden" value="@number" />
+        <label>Tài liệu @block.DisplayOrder
+        @if(block.BlockType=="IMAGE") { <input type="file" name="image" accept="image/png,image/jpeg" required /><small>Chọn ảnh thay thế PNG/JPEG, không quá 10 MB.</small> }
+        else { <textarea name="textContent" rows="8" required class="reading-text">@block.TextContent</textarea> }
+        </label><button type="submit" class="secondary">Lưu tài liệu @block.DisplayOrder</button><hr />
+    </form>
+}
+</details>

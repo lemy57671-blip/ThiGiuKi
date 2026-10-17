@@ -1,0 +1,15 @@
+@model LeHoangMy_1381.MyProject.Toeic.ExamSummary
+@if (Model.CanDelete)
+{
+    <form action="/Reading/DeleteDraft" method="post" class="exam-lifecycle-form" data-exam-title="@Model.Title" data-exam-version="@Model.Version" data-exam-action="delete">
+        @Html.AntiForgeryToken()<input type="hidden" name="ExamId" value="@Model.Id" /><input type="hidden" name="ExamRowVersion" value="@Model.ExamRowVersion" />
+        <button type="submit" class="danger-button">Xóa bản nháp</button>
+    </form>
+}
+else if (Model.Status == "PUBLISHED")
+{
+    <form action="/Reading/Archive" method="post" class="exam-lifecycle-form" data-exam-title="@Model.Title" data-exam-version="@Model.Version" data-exam-action="archive">
+        @Html.AntiForgeryToken()<input type="hidden" name="ExamId" value="@Model.Id" /><input type="hidden" name="ExamRowVersion" value="@Model.ExamRowVersion" />
+        <button type="submit" class="secondary">Lưu trữ đề</button>
+    </form>
+}

@@ -1,0 +1,23 @@
+@model System.Collections.Generic.List<LeHoangMy_1381.MyProject.Toeic.ExamSummary>
+@{
+    Layout="~/Views/Shared/_ReadingLayout.cshtml"; ViewBag.Title="Quản lý đề thi";
+    var published=Model.Count(e => e.Status == "PUBLISHED");
+}
+@if (ViewBag.Dashboard == true)
+{
+    <section class="hero"><span class="pill lavender">Không gian học tập chuẩn bị cho mọi hành trình</span><h1>Chào giảng viên! Cùng quản lý các đề thi hôm nay nhé.</h1><p>Hệ thống quản lý bài thi TOEIC Reading · Sẵn sàng hỗ trợ chuẩn hóa RC06 với cấu trúc Part 5, 6, 7.</p><a class="button primary" href="/Reading/Upload">↥ Nhập đề thi mới (.docx)</a></section>
+}
+<section class="metrics">
+    <article class="metric"><span>TỔNG NGÂN HÀNG ĐỀ</span><strong>@Model.Count</strong><small>bộ đề Reading</small></article>
+    <article class="metric mint"><span>ĐÃ PHÁT HÀNH</span><strong>@published</strong><small>khả dụng cho sinh viên</small></article>
+    <article class="metric peach"><span>BẢN NHÁP ĐANG SOẠN</span><strong>@Model.Count(e => e.Status == "DRAFT")</strong><small>cần duyệt nội dung</small></article>
+    <article class="metric"><span>TỔNG LƯỢT LÀM BÀI</span><strong>@ViewBag.TotalAttempts</strong><small>Trung bình: @(ViewBag.Average == null ? "Chưa có bài nộp" : ((decimal)ViewBag.Average).ToString("0.00")+"%")</small></article>
+</section>
+<section class="panel heading-row"><div><h1>Quản lý đề thi TOEIC Reading</h1><p>Rà soát nội dung, xác nhận đáp án và xuất bản đề thi.</p></div><a class="button primary" href="/Reading/Upload">↥ Nhập đề từ Word</a></section>
+<div class="filters"><input id="exam-search" type="search" placeholder="Tìm kiếm theo tên đề, mã đề…" aria-label="Tìm đề thi" /><select id="exam-status" aria-label="Lọc trạng thái"><option value="">Tất cả (@Model.Count)</option><option value="PUBLISHED">Đã xuất bản (@published)</option><option value="DRAFT">Bản nháp</option><option value="ARCHIVED">Đã lưu trữ</option></select></div>
+<section class="panel table-scroll"><table id="exams-table"><thead><tr><th>MÃ ĐỀ</th><th>TÊN ĐỀ THI</th><th>CẤU TRÚC & SỐ CÂU</th><th>THỜI GIAN</th><th>TRẠNG THÁI</th><th>THAO TÁC</th></tr></thead><tbody>
+@foreach (var exam in Model)
+{
+    <tr data-status="@exam.Status" data-exam-id="@exam.Id"><td><b class="primary-text">@exam.SourceId</b><small>v@(exam.Version)</small></td><td><strong>@exam.Title</strong><small>Đáp án đã duyệt: @exam.VerifiedKeys/100</small></td><td>@exam.QuestionCount câu<small>Part 5: 30 · Part 6: 16 · Part 7: 54</small></td><td><span class="pill lavender">◷ @exam.DurationMinutes phút</span></td><td><span class="pill @(exam.Status == "PUBLISHED" ? "mint" : "peach")">@(exam.Status == "PUBLISHED" ? "Đã xuất bản" : exam.Status == "DRAFT" ? "Bản nháp" : "Đã lưu trữ")</span></td><td><div class="exam-actions"><a class="button secondary" href="/Reading/Preview/@exam.Id">Xem & sửa</a> <a href="/Reading/Statistics/@exam.Id">Thống kê ↗</a>@await Html.PartialAsync("_ReadingExamActions",exam)</div></td></tr>
+}
+</tbody></table><p id="no-matches" hidden>Không có đề phù hợp với bộ lọc.</p>@if (Model.Count == 0) { <p>Chưa có đề thi. Hãy nhập file Word có tag để bắt đầu.</p> }</section>
